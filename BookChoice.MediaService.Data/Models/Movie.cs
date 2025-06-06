@@ -17,12 +17,10 @@ namespace BookChoice.MediaService.Data.Models
 
         public int Id { get; set; }
 
-        //public Images Images { get; set; }
+        public Images? Images { get; set; }
 
         [JsonPropertyName("imdb_id")]
         public string? ImdbId { get; set; }
-
-        //public KeywordsContainer Keywords { get; set; }
 
         [JsonPropertyName("original_language")]
         public string? OriginalLanguage { get; set; }
@@ -61,7 +59,7 @@ namespace BookChoice.MediaService.Data.Models
 
         public bool Video { get; set; }
 
-        //public IEnumerable<Video> Videos { get; set; }
+        public IEnumerable<Video> Videos { get; set; } = [];
 
         [JsonPropertyName("vote_average")]
         public double VoteAverage { get; set; }
