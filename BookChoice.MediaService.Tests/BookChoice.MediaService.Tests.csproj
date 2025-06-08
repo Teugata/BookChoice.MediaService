@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoFixture.AutoNSubstitute" Version="4.18.1" />
     <PackageReference Include="AutoFixture.Xunit2" Version="4.18.1" />
     <PackageReference Include="coverlet.collector" Version="6.0.4">
       <PrivateAssets>all</PrivateAssets>
@@ -18,6 +19,7 @@
     <PackageReference Include="FluentAssertions" Version="8.3.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <PackageReference Include="RichardSzalay.MockHttp" Version="7.0.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.0">
       <PrivateAssets>all</PrivateAssets>
@@ -32,10 +34,6 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Controllers\" />
   </ItemGroup>
 
 </Project>

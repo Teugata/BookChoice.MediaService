@@ -1,6 +1,7 @@
-﻿using System.Text.Json.Serialization;
+﻿using BookChoice.MediaService.Data.Models.YouTube;
+using System.Text.Json.Serialization;
 
-namespace BookChoice.MediaService.Data.Models
+namespace BookChoice.MediaService.Data.Models.TMDb
 {
     public partial class Movie
     {
@@ -66,5 +67,7 @@ namespace BookChoice.MediaService.Data.Models
 
         [JsonPropertyName("vote_count")]
         public int VoteCount { get; set; }
+
+        public IEnumerable<YouTubeVideo> YouTubeVideos { get; set; } = [];
     }
 }

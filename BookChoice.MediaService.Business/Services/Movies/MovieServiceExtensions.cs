@@ -1,8 +1,9 @@
-﻿using BookChoice.MediaService.Business.Services;
+﻿using BookChoice.MediaService.Business.Clients.TMDb;
+using BookChoice.MediaService.Business.Clients.YouTube;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BookChoice.MediaService.Business.Extensions
+namespace BookChoice.MediaService.Business.Services.Movies
 {
     public static class MovieServiceExtensions
     {
@@ -10,6 +11,7 @@ namespace BookChoice.MediaService.Business.Extensions
         {
             services.AddSingleton<IMovieService, MovieService>();
             services.AddTMDbClient(configuration);
+            services.AddYouTubeClient(configuration);
 
             return services;
         }

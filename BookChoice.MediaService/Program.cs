@@ -1,4 +1,4 @@
-using BookChoice.MediaService.Business.Extensions;
+using BookChoice.MediaService.Business.Services.Movies;
 
 var builder = WebApplication.CreateBuilder(args);
 

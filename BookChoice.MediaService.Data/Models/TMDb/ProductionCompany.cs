@@ -1,11 +1,9 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace BookChoice.MediaService.Data.Models
+namespace BookChoice.MediaService.Data.Models.TMDb
 {
     public class ProductionCompany
     {
-        public int Id { get; set; } = 0;
-
         [JsonPropertyName("logo_path")]
         public string? LogoPath { get; set; }
         public string? Name { get; set; }

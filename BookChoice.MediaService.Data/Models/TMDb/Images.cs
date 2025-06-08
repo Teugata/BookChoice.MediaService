@@ -1,4 +1,4 @@
-﻿namespace BookChoice.MediaService.Data.Models
+﻿namespace BookChoice.MediaService.Data.Models.TMDb
 {
     public class Images
     {

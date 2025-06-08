@@ -1,11 +1,10 @@
-﻿using BookChoice.MediaService.Business.Clients;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Polly;
 using Polly.Extensions.Http;
 
-namespace BookChoice.MediaService.Business.Extensions
+namespace BookChoice.MediaService.Business.Clients.TMDb
 {
     public static class TMDbClientExtensions
     {

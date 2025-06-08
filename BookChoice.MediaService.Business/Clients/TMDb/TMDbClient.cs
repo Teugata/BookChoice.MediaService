@@ -1,10 +1,9 @@
-﻿using BookChoice.MediaService.Data.Models;
+﻿using BookChoice.MediaService.Data.Models.TMDb;
 using Microsoft.Extensions.Options;
-using System.Diagnostics.Tracing;
 using System.Net;
 using System.Text.Json;
 
-namespace BookChoice.MediaService.Business.Clients
+namespace BookChoice.MediaService.Business.Clients.TMDb
 {
     public class TMDbClient : ITMDbClient
     {
@@ -23,17 +22,19 @@ namespace BookChoice.MediaService.Business.Clients
             }
         }
 
-        public async Task<Movie?> Get(string id)
+        public async Task<Movie?> GetMovieAsync(string id)
         {
-            var movie = await Get<Movie>("movie", id);
+            var movie = await GetAsync<Movie>($"movie/{id}");
             if (movie != null)
             {
-                movie.Images = await Get<Images>("movie", $"{id}/images");
+                movie.Images = await GetAsync<Images>($"movie/{id}/images");
+                var videosResult = await GetAsync<VideosResult>($"movie/{id}/videos");
+                movie.Videos = videosResult?.Results ?? [];
             }
             return movie;
         }
 
-        private async Task<T?> Get<T>(string endpoint, string path) where T : class
+        private async Task<T?> GetAsync<T>(string path) where T : class
         {
             try
             {
@@ -43,7 +44,7 @@ namespace BookChoice.MediaService.Business.Clients
                 };
                 var queryString = await new FormUrlEncodedContent(queryParams).ReadAsStringAsync();
 
-                var result = await _httpClient.GetAsync($"{endpoint}/{path}?{queryString}");
+                var result = await _httpClient.GetAsync($"{path}?{queryString}");
                 if (result.StatusCode == HttpStatusCode.NotFound)
                 {
                     return null;
@@ -52,12 +53,12 @@ namespace BookChoice.MediaService.Business.Clients
                 result.EnsureSuccessStatusCode();
 
                 var content = await result.Content.ReadAsStringAsync();
-                var deserialized = JsonSerializer.Deserialize<T>(content, JsonSerializerOptions) 
+                var deserialized = JsonSerializer.Deserialize<T>(content, JsonSerializerOptions)
                     ?? throw new Exception($"Failed to deserialize {typeof(T).Name} data for path {path}.");
 
                 return deserialized;
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex)
             {
                 throw new Exception($"Error fetching {typeof(T).Name} with path {path}: {ex.Message}", ex);
             }

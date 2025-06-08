@@ -1,4 +1,4 @@
-﻿namespace BookChoice.MediaService.Business.Clients
+﻿namespace BookChoice.MediaService.Business.Clients.TMDb
 {
     public class TMDbClientOptions
     {
