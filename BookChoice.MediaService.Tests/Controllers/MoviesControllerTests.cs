@@ -6,6 +6,7 @@ using BookChoice.MediaService.Tests.Attributes;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
@@ -16,13 +17,14 @@ namespace BookChoice.MediaService.Tests.Controllers
         [Theory, AutoNSubstituteData]
         public async Task Get_ShouldReturnBadRequest_WhenIdIsNull(
             [Frozen] ILogger<MoviesController> logger,
-            [Frozen] IMovieService movieService)
+            [Frozen] IMovieService movieService,
+            [Frozen] IMemoryCache cache)
         {
             // Arrange
-            var controller = new MoviesController(logger, movieService);
+            var controller = new MoviesController(logger, movieService, cache);
 
             // Act
-            var result = await controller.Get(null!, true, 10);
+            var result = await controller.GetAsync(null!);
 
             // Assert
             var badRequest = result as BadRequestObjectResult;
@@ -33,13 +35,14 @@ namespace BookChoice.MediaService.Tests.Controllers
         [Theory, AutoNSubstituteData]
         public async Task Get_ShouldReturnBadRequest_WhenIdIsEmpty(
             [Frozen] ILogger<MoviesController> logger,
-            [Frozen] IMovieService movieService)
+            [Frozen] IMovieService movieService,
+            [Frozen] IMemoryCache cache)
         {
             // Arrange
-            var controller = new MoviesController(logger, movieService);
+            var controller = new MoviesController(logger, movieService, cache);
 
             // Act
-            var result = await controller.Get(string.Empty, true, 10);
+            var result = await controller.GetAsync(string.Empty);
 
             // Assert
             var badRequest = result as BadRequestObjectResult;
@@ -51,14 +54,17 @@ namespace BookChoice.MediaService.Tests.Controllers
         public async Task Get_ShouldReturnNotFound_WhenMovieIsNull(
             string id,
             [Frozen] ILogger<MoviesController> logger,
-            [Frozen] IMovieService movieService)
+            [Frozen] IMovieService movieService,
+            [Frozen] IMemoryCache cache)
         {
             // Arrange
-            movieService.GetAsync(id, true, 10).Returns((Movie?)null);
-            var controller = new MoviesController(logger, movieService);
+            bool includeYouTubeVideos = true;
+            int maxYouTubeResults = 10;
+            movieService.GetAsync(id, includeYouTubeVideos, maxYouTubeResults).Returns((Movie?)null);
+            var controller = new MoviesController(logger, movieService, cache);
 
             // Act
-            var result = await controller.Get(id, true, 10);
+            var result = await controller.GetAsync(id, includeYouTubeVideos, maxYouTubeResults);
 
             // Assert
             result.Should().BeOfType<NotFoundResult>();
@@ -69,33 +75,41 @@ namespace BookChoice.MediaService.Tests.Controllers
             string id,
             Movie movie,
             [Frozen] ILogger<MoviesController> logger,
-            [Frozen] IMovieService movieService)
+            [Frozen] IMovieService movieService,
+            [Frozen] IMemoryCache cache)
         {
             // Arrange
-            movieService.GetAsync(id, true, 10).Returns(movie);
-            var controller = new MoviesController(logger, movieService);
+            bool includeYouTubeVideos = true;
+            int maxYouTubeResults = 10;
+            movieService.GetAsync(id, includeYouTubeVideos, maxYouTubeResults).Returns(movie);
+            var controller = new MoviesController(logger, movieService, cache);
 
             // Act
-            var result = await controller.Get(id, true, 10);
+            var result = await controller.GetAsync(id, includeYouTubeVideos, maxYouTubeResults);
 
             // Assert
             var okResult = result as OkObjectResult;
             okResult!.StatusCode.Should().Be(StatusCodes.Status200OK);
             okResult.Value.Should().Be(movie);
+            await movieService.Received(1).GetAsync(id, includeYouTubeVideos, maxYouTubeResults);
+            cache.Received(1).CreateEntry($"movie:{id}:yt:{includeYouTubeVideos}:max:{maxYouTubeResults}");
         }
 
         [Theory, AutoNSubstituteData]
         public async Task Get_ShouldReturnInternalServerError_WhenExceptionThrown(
             string id,
             [Frozen] ILogger<MoviesController> logger,
-            [Frozen] IMovieService movieService)
+            [Frozen] IMovieService movieService,
+            [Frozen] IMemoryCache cache)
         {
             // Arrange
-            movieService.GetAsync(id, true, 10).Returns<Task<Movie?>>(_ => throw new Exception("Test exception"));
-            var controller = new MoviesController(logger, movieService);
+            bool includeYouTubeVideos = true;
+            int maxYouTubeResults = 10;
+            movieService.GetAsync(id, includeYouTubeVideos, maxYouTubeResults).Returns<Task<Movie?>>(_ => throw new Exception("Test exception"));
+            var controller = new MoviesController(logger, movieService, cache);
 
             // Act
-            var result = await controller.Get(id, true, 10);
+            var result = await controller.GetAsync(id, includeYouTubeVideos, maxYouTubeResults);
 
             // Assert
             var objectResult = result as ObjectResult;
@@ -104,46 +118,31 @@ namespace BookChoice.MediaService.Tests.Controllers
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task Get_ShouldPassIncludeAdditionalYouTubeVideosFalse_ToService(
+        public async Task Get_ShouldReturnCachedMovie_WhenCacheHit(
             string id,
             Movie movie,
             [Frozen] ILogger<MoviesController> logger,
-            [Frozen] IMovieService movieService)
+            [Frozen] IMovieService movieService,
+            [Frozen] IMemoryCache cache)
         {
             // Arrange
-            movieService.GetAsync(id, false, 10).Returns(movie);
-            var controller = new MoviesController(logger, movieService);
+            bool includeYouTubeVideos = true;
+            int maxYouTubeResults = 10;
+            cache.TryGetValue($"movie:{id}:yt:{includeYouTubeVideos}:max:{maxYouTubeResults}", out Arg.Any<Movie?>()).Returns(x =>
+            {
+                x[1] = movie;
+                return true;
+            });
+            var controller = new MoviesController(logger, movieService, cache);
 
             // Act
-            var result = await controller.Get(id, false, 10);
+            var result = await controller.GetAsync(id, includeYouTubeVideos, maxYouTubeResults);
 
             // Assert
             var okResult = result as OkObjectResult;
             okResult!.StatusCode.Should().Be(StatusCodes.Status200OK);
             okResult.Value.Should().Be(movie);
-            await movieService.Received(1).GetAsync(id, false, 10);
-        }
-
-        [Theory, AutoNSubstituteData]
-        public async Task Get_ShouldPassMaxYouTubeResults_ToService(
-            string id,
-            Movie movie,
-            [Frozen] ILogger<MoviesController> logger,
-            [Frozen] IMovieService movieService)
-        {
-            // Arrange
-            int maxResults = 5;
-            movieService.GetAsync(id, true, maxResults).Returns(movie);
-            var controller = new MoviesController(logger, movieService);
-
-            // Act
-            var result = await controller.Get(id, true, maxResults);
-
-            // Assert
-            var okResult = result as OkObjectResult;
-            okResult!.StatusCode.Should().Be(StatusCodes.Status200OK);
-            okResult.Value.Should().Be(movie);
-            await movieService.Received(1).GetAsync(id, true, maxResults);
+            await movieService.DidNotReceive().GetAsync(Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<int>());
         }
     }
 }

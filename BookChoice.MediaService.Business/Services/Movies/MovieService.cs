@@ -2,7 +2,6 @@
 using BookChoice.MediaService.Business.Clients.YouTube;
 using BookChoice.MediaService.Data.Models.TMDb;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace BookChoice.MediaService.Business.Services.Movies
 {
