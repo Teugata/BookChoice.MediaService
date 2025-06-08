@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Polly;
 using Polly.Extensions.Http;
+using System.Net.Http.Headers;
 
 namespace BookChoice.MediaService.Business.Clients.TMDb
 {
@@ -20,6 +21,13 @@ namespace BookChoice.MediaService.Business.Clients.TMDb
                 var options = sp.GetRequiredService<IOptions<TMDbClientOptions>>().Value;
                 client.BaseAddress = options.BaseUrl ?? throw new InvalidOperationException("TMDbClient BaseUrl must be configured in appsettings.");
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+                if (string.IsNullOrEmpty(options.AccessToken))
+                {
+                    throw new InvalidOperationException("TMDbClient AccessToken must be configured in appsettings.");
+                }
+
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.AccessToken);
             }).AddPolicyHandler(retryPolicy);
 
             return services;

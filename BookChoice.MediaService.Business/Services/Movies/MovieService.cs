@@ -5,14 +5,14 @@ using Microsoft.Extensions.Logging;
 
 namespace BookChoice.MediaService.Business.Services.Movies
 {
-    public class MovieService(ILogger<MovieService> _logger, ITMDbClient _client, IYouTubeClient _youTubeClient) : IMovieService
+    public class MovieService(ILogger<MovieService> _logger, ITMDbClient _tmdbClient, IYouTubeClient _youTubeClient) : IMovieService
     {
         public async Task<Movie?> GetAsync(string id, bool includeAdditionalYouTubeVideos = true, int maxYouTubeResults = 10)
         {
             Movie? movieResult;
             try
             {
-                movieResult = await _client.GetMovieAsync(id);
+                movieResult = await _tmdbClient.GetMovieAsync(id);
             }
             catch (Exception ex)
             {
@@ -40,9 +40,25 @@ namespace BookChoice.MediaService.Business.Services.Movies
             return movieResult;
         }
 
-        public Task<IEnumerable<Movie>> SearchAsync(string title)
+        public async Task<IEnumerable<Movie>> SearchAsync(string query)
         {
-            throw new NotImplementedException();
+            IEnumerable<Movie> searchResults;
+            try
+            {
+                searchResults = await _tmdbClient.SearchMoviesAsync(query);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching for movies with query {Query}", query);
+                throw;
+            }
+
+            if (!searchResults.Any())
+            {
+                _logger.LogWarning("No movies found for query {Query}.", query);
+            }
+
+            return searchResults;
         }
     }
 }

@@ -7,9 +7,6 @@ namespace BookChoice.MediaService.Data.Models.TMDb
     {
         public bool Adult { get; set; }
 
-        [JsonPropertyName("backdrop_path")]
-        public string? BackdropPath { get; set; }
-
         public long Budget { get; set; }
 
         public IEnumerable<Genre> Genres { get; set; } = [];
@@ -43,7 +40,7 @@ namespace BookChoice.MediaService.Data.Models.TMDb
         public IEnumerable<ProductionCountry> ProductionCountries { get; set; } = [];
 
         [JsonPropertyName("release_date")]
-        public DateTime? ReleaseDate { get; set; }
+        public string? ReleaseDate { get; set; }
 
         public long Revenue { get; set; }
 

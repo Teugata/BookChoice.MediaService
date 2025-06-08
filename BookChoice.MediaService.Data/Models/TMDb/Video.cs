@@ -23,7 +23,7 @@ namespace BookChoice.MediaService.Data.Models.TMDb
 
         public string Type { get; set; }
 
-        public Uri? Link => string.IsNullOrEmpty(Key) ? null : 
+        public Uri? Link => string.IsNullOrEmpty(Key) ? null :
             Site.Equals("YouTube") ? new Uri($"https://www.youtube.com/watch?v={Key}") : null;
     }
 }

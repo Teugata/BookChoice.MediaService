@@ -14,7 +14,7 @@ namespace BookChoice.MediaService.Data.Models.TMDb
 
         public int Width { get; set; }
 
-        public Uri? Link => string.IsNullOrEmpty(FilePath) ? null : 
+        public Uri? Link => string.IsNullOrEmpty(FilePath) ? null :
             new Uri($"https://image.tmdb.org/t/p/original/{FilePath}");
     }
 }

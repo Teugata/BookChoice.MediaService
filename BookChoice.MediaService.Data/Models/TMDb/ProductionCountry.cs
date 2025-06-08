@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace BookChoice.MediaService.Data.Models.TMDb
+﻿namespace BookChoice.MediaService.Data.Models.TMDb
 {
     public class ProductionCountry
     {

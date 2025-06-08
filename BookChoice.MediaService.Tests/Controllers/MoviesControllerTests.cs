@@ -14,8 +14,12 @@ namespace BookChoice.MediaService.Tests.Controllers
 {
     public class MoviesControllerTests
     {
-        [Theory, AutoNSubstituteData]
-        public async Task Get_ShouldReturnBadRequest_WhenIdIsNull(
+        [Theory]
+        [InlineAutoNSubstituteData(default!)]
+        [InlineAutoNSubstituteData("")]
+        [InlineAutoNSubstituteData(" ")]
+        public async Task Get_ShouldReturnBadRequest_WhenIdIsNullOrWhitespace(
+            string id,
             [Frozen] ILogger<MoviesController> logger,
             [Frozen] IMovieService movieService,
             [Frozen] IMemoryCache cache)
@@ -24,7 +28,7 @@ namespace BookChoice.MediaService.Tests.Controllers
             var controller = new MoviesController(logger, movieService, cache);
 
             // Act
-            var result = await controller.GetAsync(null!);
+            var result = await controller.GetAsync(id);
 
             // Assert
             var badRequest = result as BadRequestObjectResult;
@@ -143,6 +147,70 @@ namespace BookChoice.MediaService.Tests.Controllers
             okResult!.StatusCode.Should().Be(StatusCodes.Status200OK);
             okResult.Value.Should().Be(movie);
             await movieService.DidNotReceive().GetAsync(Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<int>());
+        }
+
+        [Theory]
+        [InlineAutoNSubstituteData(default!)]
+        [InlineAutoNSubstituteData("")]
+        [InlineAutoNSubstituteData(" ")]
+        public async Task Search_ShouldReturnBadRequest_WhenQueryIsNullOrWhitespace(
+            string query,
+            [Frozen] ILogger<MoviesController> logger,
+            [Frozen] IMovieService movieService,
+            [Frozen] IMemoryCache cache)
+        {
+            // Arrange
+            var controller = new MoviesController(logger, movieService, cache);
+
+            // Act
+            var result = await controller.SearchAsync(query);
+
+            // Assert
+            var badRequest = result as BadRequestObjectResult;
+            badRequest!.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            badRequest.Value.Should().Be("Query cannot be null or empty.");
+        }
+
+        [Theory, AutoNSubstituteData]
+        public async Task Search_ShouldReturnOk_WhenResultsFound(
+            string query,
+            IEnumerable<Movie> movies,
+            [Frozen] ILogger<MoviesController> logger,
+            [Frozen] IMovieService movieService,
+            [Frozen] IMemoryCache cache)
+        {
+            // Arrange
+            movieService.SearchAsync(query).Returns(movies);
+            var controller = new MoviesController(logger, movieService, cache);
+
+            // Act
+            var result = await controller.SearchAsync(query);
+
+            // Assert
+            var okResult = result as OkObjectResult;
+            okResult!.StatusCode.Should().Be(StatusCodes.Status200OK);
+            okResult.Value.Should().BeEquivalentTo(movies);
+            await movieService.Received(1).SearchAsync(query);
+        }
+
+        [Theory, AutoNSubstituteData]
+        public async Task Search_ShouldReturnInternalServerError_WhenExceptionThrown(
+            string query,
+            [Frozen] ILogger<MoviesController> logger,
+            [Frozen] IMovieService movieService,
+            [Frozen] IMemoryCache cache)
+        {
+            // Arrange
+            movieService.SearchAsync(query).Returns<Task<IEnumerable<Movie>>>(_ => throw new Exception("Test exception"));
+            var controller = new MoviesController(logger, movieService, cache);
+
+            // Act
+            var result = await controller.SearchAsync(query);
+
+            // Assert
+            var objectResult = result as ObjectResult;
+            objectResult!.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            objectResult.Value.Should().Be("An error occurred while processing your request.");
         }
     }
 }

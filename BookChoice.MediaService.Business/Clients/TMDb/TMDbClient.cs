@@ -1,29 +1,20 @@
 ﻿using BookChoice.MediaService.Data.Models.TMDb;
-using Microsoft.Extensions.Options;
 using System.Net;
 using System.Text.Json;
 
 namespace BookChoice.MediaService.Business.Clients.TMDb
 {
-    public class TMDbClient : ITMDbClient
+    public class TMDbClient(HttpClient _httpClient) : ITMDbClient
     {
-        private readonly HttpClient _httpClient;
-        private readonly TMDbClientOptions _options;
         private static readonly JsonSerializerOptions JsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
-
-        public TMDbClient(HttpClient httpClient, IOptions<TMDbClientOptions> options)
-        {
-            _httpClient = httpClient;
-            _options = options.Value;
-
-            if (string.IsNullOrEmpty(_options.ApiKey))
-            {
-                throw new ArgumentException("Api Key must be provided for TMDbClient.", nameof(options));
-            }
-        }
 
         public async Task<Movie?> GetMovieAsync(string id)
         {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                throw new ArgumentException("Movie ID cannot be null or empty.", nameof(id));
+            }
+
             var movie = await GetAsync<Movie>($"movie/{id}");
             if (movie != null)
             {
@@ -34,17 +25,34 @@ namespace BookChoice.MediaService.Business.Clients.TMDb
             return movie;
         }
 
-        private async Task<T?> GetAsync<T>(string path) where T : class
+        public async Task<IEnumerable<Movie>> SearchMoviesAsync(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                throw new ArgumentException("Movie query cannot be null or empty.", nameof(query));
+            }
+
+            var queryParams = new Dictionary<string, string>
+            {
+                ["query"] = Uri.EscapeDataString(query)
+            };
+
+            var result = await GetAsync<MovieSearchResults>("search/movie", queryParams);
+            return result?.Results ?? [];
+        }
+
+        private async Task<T?> GetAsync<T>(string path, Dictionary<string, string>? queryParams = null) where T : class
         {
             try
             {
-                var queryParams = new Dictionary<string, string>
+                string url = path;
+                if (queryParams != null && queryParams.Count > 0)
                 {
-                    ["api_key"] = _options.ApiKey!
-                };
-                var queryString = await new FormUrlEncodedContent(queryParams).ReadAsStringAsync();
+                    var queryString = await new FormUrlEncodedContent(queryParams).ReadAsStringAsync();
+                    url = $"{path}?{queryString}";
+                }
 
-                var result = await _httpClient.GetAsync($"{path}?{queryString}");
+                var result = await _httpClient.GetAsync(url);
                 if (result.StatusCode == HttpStatusCode.NotFound)
                 {
                     return null;

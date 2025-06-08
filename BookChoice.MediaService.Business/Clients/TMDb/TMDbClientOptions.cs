@@ -3,6 +3,6 @@
     public class TMDbClientOptions
     {
         public Uri? BaseUrl { get; set; }
-        public string? ApiKey { get; set; }
+        public string? AccessToken { get; set; }
     }
 }

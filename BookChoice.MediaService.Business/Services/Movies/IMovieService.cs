@@ -6,6 +6,6 @@ namespace BookChoice.MediaService.Business.Services.Movies
     {
         Task<Movie?> GetAsync(string id, bool includeAdditionalYouTubeVideos = true, int maxYouTubeResults = 10);
 
-        Task<IEnumerable<Movie>> SearchAsync(string title);
+        Task<IEnumerable<Movie>> SearchAsync(string query);
     }
 }
