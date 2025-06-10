@@ -6,7 +6,7 @@ namespace BookChoice.MediaService.Data.Models.TMDb
     {
         public int Page { get; set; }
 
-        public List<Movie> Results { get; set; } = [];
+        public IEnumerable<Movie> Results { get; set; } = [];
 
         [JsonPropertyName("total_pages")]
         public int TotalPages { get; set; }

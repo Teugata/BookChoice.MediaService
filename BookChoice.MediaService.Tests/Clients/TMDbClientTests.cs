@@ -3,6 +3,7 @@ using BookChoice.MediaService.Business.Clients.TMDb;
 using BookChoice.MediaService.Data.Models.TMDb;
 using BookChoice.MediaService.Tests.Attributes;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using NSubstitute;
 using RichardSzalay.MockHttp;
 using System.Net;
@@ -23,10 +24,11 @@ namespace BookChoice.MediaService.Tests.Clients
             var client = new TMDbClient(httpClient);
 
             // Act
-            Func<Task> act = async () => await client.GetMovieAsync(id);
+            Func<Task> act = async () => await client.GetMovieAsync(id, default);
 
             // Assert
-            await act.Should().ThrowAsync<ArgumentException>().WithMessage("*Movie ID cannot be null or empty*");
+            await act.Should().ThrowAsync<ArgumentException>()
+                .WithMessage("*Movie ID cannot be null or empty*");
         }
 
         [Theory, AutoNSubstituteData]
@@ -54,7 +56,7 @@ namespace BookChoice.MediaService.Tests.Clients
             var client = new TMDbClient(httpClient);
 
             // Act
-            var result = await client.GetMovieAsync(id);
+            var result = await client.GetMovieAsync(id, default);
 
             // Assert
             result.Should().BeEquivalentTo(movie);
@@ -76,7 +78,7 @@ namespace BookChoice.MediaService.Tests.Clients
             var client = new TMDbClient(httpClient);
 
             // Act
-            var result = await client.GetMovieAsync(id);
+            var result = await client.GetMovieAsync(id, default);
 
             // Assert
             result.Should().BeNull();
@@ -98,7 +100,7 @@ namespace BookChoice.MediaService.Tests.Clients
             var client = new TMDbClient(httpClient);
 
             // Act
-            Func<Task> act = async () => await client.GetMovieAsync(id);
+            Func<Task> act = async () => await client.GetMovieAsync(id, default);
 
             // Assert
             await act.Should().ThrowAsync<Exception>();
@@ -107,6 +109,7 @@ namespace BookChoice.MediaService.Tests.Clients
         [Theory, AutoNSubstituteData]
         public async Task SearchMoviesAsync_ShouldReturnResults_WhenApiReturnsResults(
             string query,
+            int page,
             MovieSearchResults searchResult)
         {
             // Arrange
@@ -121,18 +124,19 @@ namespace BookChoice.MediaService.Tests.Clients
             var client = new TMDbClient(httpClient);
 
             // Act
-            var result = await client.SearchMoviesAsync(query);
+            var result = await client.SearchMoviesAsync(query, page, default);
 
             // Assert
-            result.Should().BeEquivalentTo(searchResult.Results);
+            result.Should().BeEquivalentTo(searchResult);
         }
 
         [Theory, AutoNSubstituteData]
         public async Task SearchMoviesAsync_ShouldReturnEmpty_WhenNoResults(
-            string query)
+            string query,
+            int page)
         {
             // Arrange
-            var emptyResult = new MovieSearchResults { Results = [] };
+            var emptyResult = new MovieSearchResults { Results = Array.Empty<Movie>() };
             var mockHttp = new MockHttpMessageHandler();
             mockHttp.When($"*/search/movie*")
                 .Respond("application/json", System.Text.Json.JsonSerializer.Serialize(emptyResult));
@@ -144,10 +148,10 @@ namespace BookChoice.MediaService.Tests.Clients
             var client = new TMDbClient(httpClient);
 
             // Act
-            var result = await client.SearchMoviesAsync(query);
+            var searchResult = await client.SearchMoviesAsync(query, page, default);
 
             // Assert
-            result.Should().BeEmpty();
+            searchResult!.Results.Should().BeEmpty();
         }
 
         [Theory]
@@ -155,22 +159,25 @@ namespace BookChoice.MediaService.Tests.Clients
         [InlineAutoData("")]
         [InlineAutoData("  ")]
         public async Task SearchMoviesAsync_ShouldThrow_WhenQueryIsNullOrWhitespace(
-            string query)
+            string query,
+            int page)
         {
             // Arrange
             var httpClient = new HttpClient();
             var client = new TMDbClient(httpClient);
 
             // Act
-            Func<Task> act = async () => await client.SearchMoviesAsync(query);
+            Func<Task> act = async () => await client.SearchMoviesAsync(query, page, default);
 
             // Assert
-            await act.Should().ThrowAsync<ArgumentException>().WithMessage("*Movie query cannot be null or empty*");
+            await act.Should().ThrowAsync<ArgumentException>()
+                .WithMessage("*Movie query cannot be null or empty*");
         }
 
         [Theory, AutoNSubstituteData]
         public async Task SearchMoviesAsync_ShouldReturnEmpty_WhenApiReturns404(
-            string query)
+            string query,
+            int page)
         {
             // Arrange
             var mockHttp = new MockHttpMessageHandler();
@@ -184,15 +191,16 @@ namespace BookChoice.MediaService.Tests.Clients
             var client = new TMDbClient(httpClient);
 
             // Act
-            var result = await client.SearchMoviesAsync(query);
+            var searchResult = await client.SearchMoviesAsync(query, page, default);
 
             // Assert
-            result.Should().BeEmpty();
+            searchResult.Should().BeNull();
         }
 
         [Theory, AutoNSubstituteData]
         public async Task SearchMoviesAsync_ShouldThrow_WhenHttpClientThrows(
-            string query)
+            string query,
+            int page)
         {
             // Arrange
             var mockHttp = new MockHttpMessageHandler();
@@ -206,7 +214,7 @@ namespace BookChoice.MediaService.Tests.Clients
             var client = new TMDbClient(httpClient);
 
             // Act
-            Func<Task> act = async () => await client.SearchMoviesAsync(query);
+            Func<Task> act = async () => await client.SearchMoviesAsync(query, page, default);
 
             // Assert
             await act.Should().ThrowAsync<Exception>();

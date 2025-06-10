@@ -1,5 +1,6 @@
 using BookChoice.MediaService.Business.Services.Movies;
 using BookChoice.MediaService.Data.Models.TMDb;
+using BookChoice.MediaService.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -28,7 +29,7 @@ namespace BookChoice.MediaService.Controllers
         [ProducesResponseType(typeof(Movie), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAsync(string id, bool includeAdditionalYouTubeVideos = true, int maxYouTubeResults = 10)
+        public async Task<IActionResult> GetAsync(string id, bool includeAdditionalYouTubeVideos = true, int maxYouTubeResults = 10, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -36,7 +37,7 @@ namespace BookChoice.MediaService.Controllers
             }
 
             // Redis cache could be used here if needed, but for simplicity, we use in-memory cache.
-            string cacheKey = $"movie:{id}:yt:{includeAdditionalYouTubeVideos}:max:{maxYouTubeResults}";
+            string cacheKey = CacheKeyHelper.CreateMovieKey(id, includeAdditionalYouTubeVideos, maxYouTubeResults);
             if (_cache.TryGetValue<Movie>(cacheKey, out var cachedMovie))
             {
                 return Ok(cachedMovie);
@@ -45,7 +46,7 @@ namespace BookChoice.MediaService.Controllers
             Movie? movie;
             try
             {
-                movie = await _movieService.GetAsync(id, includeAdditionalYouTubeVideos, maxYouTubeResults);
+                movie = await _movieService.GetAsync(id, includeAdditionalYouTubeVideos, maxYouTubeResults, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -68,6 +69,7 @@ namespace BookChoice.MediaService.Controllers
         /// and if enabled searches YouTube (https://www.youtube.com) for additional videos based on the result title(s).
         /// </summary>
         /// <param name="query">The query to search for.</param>
+        /// <param name="page">The page number for paginated results. Default is 0.</param>
         /// <response code="200">Returns the movie details if found.</response>
         /// <response code="400">If the ID is null or empty.</response>
         /// <response code="404">If no movie is found with the given ID.</response>
@@ -76,7 +78,7 @@ namespace BookChoice.MediaService.Controllers
         [HttpGet("search")]
         [ProducesResponseType(typeof(IEnumerable<Movie>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> SearchAsync(string query)
+        public async Task<IActionResult> SearchAsync(string query, int page = 0, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(query))
             {
@@ -84,21 +86,27 @@ namespace BookChoice.MediaService.Controllers
             }
 
             // Redis cache could be used here if needed, but for simplicity, we use in-memory cache.
-            string cacheKey = $"query:{query}";
-            if (_cache.TryGetValue<Movie>(cacheKey, out var cachedMovie))
+            string cacheKey = CacheKeyHelper.CreateSearchKey(query, page);
+            if (_cache.TryGetValue<MovieSearchResults>(cacheKey, out var cachedSearchResult))
             {
-                return Ok(cachedMovie);
+                return Ok(cachedSearchResult);
             }
 
-            IEnumerable<Movie> results;
+            MovieSearchResults? results;
             try
             {
-                results = await _movieService.SearchAsync(query);
+                results = await _movieService.SearchAsync(query, page, cancellationToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error searching movies with query {Query}", query);
                 return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing your request.");
+            }
+
+            if (results == null)
+            {
+                _logger.LogWarning("No movie search results found for query {Query}.", query);
+                return NotFound("No movies found for the given query.");
             }
 
             _cache.Set(cacheKey, results, CacheDuration);

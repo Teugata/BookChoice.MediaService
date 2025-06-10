@@ -4,7 +4,7 @@ namespace BookChoice.MediaService.Business.Clients.TMDb
 {
     public interface ITMDbClient
     {
-        Task<Movie?> GetMovieAsync(string id);
-        Task<IEnumerable<Movie>> SearchMoviesAsync(string title);
+        Task<Movie?> GetMovieAsync(string id, CancellationToken cancellationToken);
+        Task<MovieSearchResults?> SearchMoviesAsync(string title, int page, CancellationToken cancellationToken);
     }
 }

@@ -6,27 +6,13 @@ using Microsoft.Extensions.Options;
 
 namespace BookChoice.MediaService.Business.Clients.YouTube
 {
-    public class YouTubeClient : IYouTubeClient
+    public class YouTubeClient(IMapper _mapper, IOptions<YouTubeClientOptions> _options) : IYouTubeClient
     {
-        private readonly YouTubeClientOptions _options;
-        private readonly IMapper _mapper;
-
-        public YouTubeClient(IMapper mapper, IOptions<YouTubeClientOptions> options)
-        {
-            _mapper = mapper;
-            _options = options.Value;
-
-            if (string.IsNullOrEmpty(_options.ApiKey))
-            {
-                throw new ArgumentException("Api Key must be provided for YouTubeClient.", nameof(options));
-            }
-        }
-
-        public async Task<IEnumerable<YouTubeVideo>> SearchVideosAsync(string query, int maxResults = 10)
+        public async Task<IEnumerable<YouTubeVideo>> SearchVideosAsync(string query, int maxResults, CancellationToken cancellationToken)
         {
             var youtubeService = new YouTubeService(new BaseClientService.Initializer()
             {
-                ApiKey = _options.ApiKey,
+                ApiKey = _options.Value.ApiKey,
                 ApplicationName = "BookChoice.MediaService"
             });
 
@@ -34,7 +20,7 @@ namespace BookChoice.MediaService.Business.Clients.YouTube
             searchListRequest.Q = query;
             searchListRequest.MaxResults = maxResults - 1;
 
-            var searchListResponse = await searchListRequest.ExecuteAsync();
+            var searchListResponse = await searchListRequest.ExecuteAsync(cancellationToken);
 
             var videos = _mapper.Map<IList<YouTubeVideo>>(searchListResponse.Items);
 

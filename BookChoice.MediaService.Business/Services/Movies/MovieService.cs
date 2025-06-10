@@ -7,12 +7,12 @@ namespace BookChoice.MediaService.Business.Services.Movies
 {
     public class MovieService(ILogger<MovieService> _logger, ITMDbClient _tmdbClient, IYouTubeClient _youTubeClient) : IMovieService
     {
-        public async Task<Movie?> GetAsync(string id, bool includeAdditionalYouTubeVideos = true, int maxYouTubeResults = 10)
+        public async Task<Movie?> GetAsync(string id, bool includeAdditionalYouTubeVideos, int maxYouTubeResults, CancellationToken cancellationToken)
         {
             Movie? movieResult;
             try
             {
-                movieResult = await _tmdbClient.GetMovieAsync(id);
+                movieResult = await _tmdbClient.GetMovieAsync(id, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -34,18 +34,18 @@ namespace BookChoice.MediaService.Business.Services.Movies
 
             if (includeAdditionalYouTubeVideos)
             {
-                movieResult.YouTubeVideos = await _youTubeClient.SearchVideosAsync(movieResult.Title, maxYouTubeResults);
+                movieResult.YouTubeVideos = await _youTubeClient.SearchVideosAsync(movieResult.Title, maxYouTubeResults, cancellationToken);
             }
 
             return movieResult;
         }
 
-        public async Task<IEnumerable<Movie>> SearchAsync(string query)
+        public async Task<MovieSearchResults?> SearchAsync(string query, int page, CancellationToken cancellationToken)
         {
-            IEnumerable<Movie> searchResults;
+            MovieSearchResults? searchResults;
             try
             {
-                searchResults = await _tmdbClient.SearchMoviesAsync(query);
+                searchResults = await _tmdbClient.SearchMoviesAsync(query, page, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -53,9 +53,9 @@ namespace BookChoice.MediaService.Business.Services.Movies
                 throw;
             }
 
-            if (!searchResults.Any())
+            if (searchResults == null || !searchResults.Results.Any())
             {
-                _logger.LogWarning("No movies found for query {Query}.", query);
+                _logger.LogWarning("No movie search results found for query {Query}.", query);
             }
 
             return searchResults;

@@ -6,6 +6,7 @@ using BookChoice.MediaService.Data.Models.TMDb;
 using BookChoice.MediaService.Data.Models.YouTube;
 using BookChoice.MediaService.Tests.Attributes;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
@@ -22,15 +23,13 @@ namespace BookChoice.MediaService.Tests.Services
             [Frozen] IYouTubeClient youTubeClient)
         {
             // Arrange
-            tmdbClient.GetMovieAsync(id).Returns<Task<Movie?>>(_ => throw exception);
+            tmdbClient.GetMovieAsync(id, Arg.Any<CancellationToken>()).Returns<Task<Movie?>>(_ => throw exception);
             var sut = new MovieService(logger, tmdbClient, youTubeClient);
 
-            Func<Task> act = async () => await sut.GetAsync(id, true, 10);
+            Func<Task> act = async () => await sut.GetAsync(id, true, 10, default);
 
-            // Act
+            // Act & Assert
             await act.Should().ThrowAsync<Exception>().WithMessage(exception.Message);
-
-            // Assert
             logger.Received(1).Log(
                 LogLevel.Error,
                 Arg.Any<EventId>(),
@@ -47,11 +46,11 @@ namespace BookChoice.MediaService.Tests.Services
             [Frozen] IYouTubeClient youTubeClient)
         {
             // Arrange
-            tmdbClient.GetMovieAsync(id).Returns((Movie?)null);
+            tmdbClient.GetMovieAsync(id, Arg.Any<CancellationToken>()).Returns((Movie?)null);
             var sut = new MovieService(logger, tmdbClient, youTubeClient);
 
             // Act
-            var result = await sut.GetAsync(id, true, 10);
+            var result = await sut.GetAsync(id, true, 10, default);
 
             // Assert
             result.Should().BeNull();
@@ -73,11 +72,11 @@ namespace BookChoice.MediaService.Tests.Services
         {
             // Arrange
             movie.Title = default;
-            tmdbClient.GetMovieAsync(id).Returns(movie);
+            tmdbClient.GetMovieAsync(id, Arg.Any<CancellationToken>()).Returns(movie);
             var sut = new MovieService(logger, tmdbClient, youTubeClient);
 
             // Act
-            var result = await sut.GetAsync(id, true, 10);
+            var result = await sut.GetAsync(id, true, 10, default);
 
             // Assert
             result.Should().Be(movie);
@@ -87,7 +86,7 @@ namespace BookChoice.MediaService.Tests.Services
                 Arg.Any<Arg.AnyType>(),
                 null,
                 Arg.Any<Func<Arg.AnyType, Exception, string>>()!);
-            await youTubeClient.DidNotReceive().SearchVideosAsync(Arg.Any<string>(), Arg.Any<int>());
+            await youTubeClient.DidNotReceive().SearchVideosAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
         }
 
         [Theory, AutoNSubstituteData]
@@ -102,17 +101,17 @@ namespace BookChoice.MediaService.Tests.Services
         {
             // Arrange
             movie.Title = title;
-            tmdbClient.GetMovieAsync(id).Returns(movie);
-            youTubeClient.SearchVideosAsync(movie.Title, 1).Returns(youTubeResult);
+            tmdbClient.GetMovieAsync(id, Arg.Any<CancellationToken>()).Returns(movie);
+            youTubeClient.SearchVideosAsync(movie.Title, 1, Arg.Any<CancellationToken>()).Returns(youTubeResult);
             var sut = new MovieService(logger, tmdbClient, youTubeClient);
 
             // Act
-            var result = await sut.GetAsync(id, true, 1);
+            var result = await sut.GetAsync(id, true, 1, default);
 
             // Assert
             result.Should().Be(movie);
             result.YouTubeVideos.Should().BeEquivalentTo(youTubeResult);
-            await youTubeClient.Received(1).SearchVideosAsync(movie.Title, 1);
+            await youTubeClient.Received(1).SearchVideosAsync(movie.Title, 1, Arg.Any<CancellationToken>());
         }
 
         [Theory, AutoNSubstituteData]
@@ -126,72 +125,73 @@ namespace BookChoice.MediaService.Tests.Services
         {
             // Arrange
             movie.Title = title;
-            tmdbClient.GetMovieAsync(id).Returns(movie);
+            tmdbClient.GetMovieAsync(id, Arg.Any<CancellationToken>()).Returns(movie);
             var sut = new MovieService(logger, tmdbClient, youTubeClient);
 
             // Act
-            var result = await sut.GetAsync(id, false, 5);
+            var result = await sut.GetAsync(id, false, 5, default);
 
             // Assert
             result.Should().Be(movie);
-            await youTubeClient.DidNotReceive().SearchVideosAsync(Arg.Any<string>(), Arg.Any<int>());
+            await youTubeClient.DidNotReceive().SearchVideosAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
         }
 
         [Theory, AutoNSubstituteData]
         public async Task SearchAsync_ShouldReturnResults_WhenTmdbReturnsMovies(
             string query,
-            IEnumerable<Movie> movies,
+            int page,
+            MovieSearchResults searchResults,
             [Frozen] ILogger<MovieService> logger,
             [Frozen] ITMDbClient tmdbClient,
             [Frozen] IYouTubeClient youTubeClient)
         {
             // Arrange
-            tmdbClient.SearchMoviesAsync(query).Returns(movies);
+            tmdbClient.SearchMoviesAsync(query, page, Arg.Any<CancellationToken>()).Returns(searchResults);
             var sut = new MovieService(logger, tmdbClient, youTubeClient);
 
             // Act
-            var result = await sut.SearchAsync(query);
+            var result = await sut.SearchAsync(query, page, default);
 
             // Assert
-            result.Should().BeEquivalentTo(movies);
-            await tmdbClient.Received(1).SearchMoviesAsync(query);
+            result.Should().BeEquivalentTo(searchResults);
+            await tmdbClient.Received(1).SearchMoviesAsync(query, page, Arg.Any<CancellationToken>());
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task SearchAsync_ShouldReturnEmpty_WhenTmdbReturnsEmpty(
+        public async Task SearchAsync_ShouldReturnNull_WhenTmdbReturnsNull(
             string query,
+            int page,
             [Frozen] ILogger<MovieService> logger,
             [Frozen] ITMDbClient tmdbClient,
             [Frozen] IYouTubeClient youTubeClient)
         {
             // Arrange
-            tmdbClient.SearchMoviesAsync(query).Returns(Enumerable.Empty<Movie>());
+            tmdbClient.SearchMoviesAsync(query, page, Arg.Any<CancellationToken>()).Returns((MovieSearchResults)default!);
             var sut = new MovieService(logger, tmdbClient, youTubeClient);
 
             // Act
-            var result = await sut.SearchAsync(query);
+            var result = await sut.SearchAsync(query, page, default);
 
             // Assert
-            result.Should().BeEmpty();
-            await tmdbClient.Received(1).SearchMoviesAsync(query);
+            result.Should().BeNull();
+            await tmdbClient.Received(1).SearchMoviesAsync(query, page, Arg.Any<CancellationToken>());
         }
 
         [Theory, AutoNSubstituteData]
         public async Task SearchAsync_ShouldThrow_WhenTmdbThrows(
             string query,
+            int page,
             Exception exception,
             [Frozen] ILogger<MovieService> logger,
             [Frozen] ITMDbClient tmdbClient,
             [Frozen] IYouTubeClient youTubeClient)
         {
             // Arrange
-            tmdbClient.SearchMoviesAsync(query).Returns<Task<IEnumerable<Movie>>>(_ => throw exception);
+            tmdbClient.SearchMoviesAsync(query, page, Arg.Any<CancellationToken>()).Returns<Task<MovieSearchResults?>>(_ => throw exception);
             var sut = new MovieService(logger, tmdbClient, youTubeClient);
 
-            // Act
-            Func<Task> act = async () => await sut.SearchAsync(query);
-
-            // Assert
+            // Act & Assert
+            Func<Task> act = async () => await sut.SearchAsync(query, page, default);
             await act.Should().ThrowAsync<Exception>().WithMessage(exception.Message);
         }
     }

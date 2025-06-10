@@ -5,6 +5,6 @@ namespace BookChoice.MediaService.Business.Clients.YouTube
 {
     public interface IYouTubeClient
     {
-        Task<IEnumerable<YouTubeVideo>> SearchVideosAsync(string query, int maxResults = 10);
+        Task<IEnumerable<YouTubeVideo>> SearchVideosAsync(string query, int maxResults, CancellationToken cancellationToken);
     }
 }

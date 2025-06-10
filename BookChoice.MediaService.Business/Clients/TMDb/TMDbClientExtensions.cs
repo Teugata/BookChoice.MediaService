@@ -11,7 +11,10 @@ namespace BookChoice.MediaService.Business.Clients.TMDb
     {
         public static IServiceCollection AddTMDbClient(this IServiceCollection services, IConfiguration configuration)
         {
-            services.Configure<TMDbClientOptions>(configuration.GetSection("TMDbClient"));
+            services.AddOptions<TMDbClientOptions>()
+                .Bind(configuration.GetSection("TMDbClient"))
+                .Validate(o => o.BaseUrl != null, "Base Url is required")
+                .Validate(o => !string.IsNullOrEmpty(o.AccessToken), "Access Token is required");
             var retryPolicy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
@@ -19,14 +22,8 @@ namespace BookChoice.MediaService.Business.Clients.TMDb
             services.AddHttpClient<ITMDbClient, TMDbClient>((sp, client) =>
             {
                 var options = sp.GetRequiredService<IOptions<TMDbClientOptions>>().Value;
-                client.BaseAddress = options.BaseUrl ?? throw new InvalidOperationException("TMDbClient BaseUrl must be configured in appsettings.");
+                client.BaseAddress = options.BaseUrl;
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
-
-                if (string.IsNullOrEmpty(options.AccessToken))
-                {
-                    throw new InvalidOperationException("TMDbClient AccessToken must be configured in appsettings.");
-                }
-
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.AccessToken);
             }).AddPolicyHandler(retryPolicy);
 
