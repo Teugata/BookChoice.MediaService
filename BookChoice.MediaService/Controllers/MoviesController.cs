@@ -3,6 +3,7 @@ using BookChoice.MediaService.Data.Models.TMDb;
 using BookChoice.MediaService.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using System.ComponentModel.DataAnnotations;
 
 namespace BookChoice.MediaService.Controllers
 {
@@ -20,6 +21,7 @@ namespace BookChoice.MediaService.Controllers
         /// <param name="id">The TMDb or IMDb identifier of the movie.</param>
         /// <param name="includeAdditionalYouTubeVideos">If true, searches YouTube for additional videos related to the movie title. Default is true.</param>
         /// <param name="maxYouTubeResults">The maximum number of YouTube videos to include if YouTube search is enabled. Default is 10.</param>
+        /// <param name="cancellationToken">Cancellation token for the request.</param>
         /// <response code="200">Returns the movie details if found.</response>
         /// <response code="400">If the ID is null or empty.</response>
         /// <response code="404">If no movie is found with the given ID.</response>
@@ -29,13 +31,13 @@ namespace BookChoice.MediaService.Controllers
         [ProducesResponseType(typeof(Movie), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetAsync(string id, bool includeAdditionalYouTubeVideos = true, int maxYouTubeResults = 10, CancellationToken cancellationToken = default)
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetAsync(
+            [FromRoute][Required] string id,
+            [FromQuery] bool includeAdditionalYouTubeVideos = true,
+            [FromQuery] int maxYouTubeResults = 10,
+            CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                return BadRequest("ID cannot be null or empty.");
-            }
-
             // Redis cache could be used here if needed, but for simplicity, we use in-memory cache.
             string cacheKey = CacheKeyHelper.CreateMovieKey(id, includeAdditionalYouTubeVideos, maxYouTubeResults);
             if (_cache.TryGetValue<Movie>(cacheKey, out var cachedMovie))
@@ -69,22 +71,23 @@ namespace BookChoice.MediaService.Controllers
         /// and if enabled searches YouTube (https://www.youtube.com) for additional videos based on the result title(s).
         /// </summary>
         /// <param name="query">The query to search for.</param>
-        /// <param name="page">The page number for paginated results. Default is 0.</param>
+        /// <param name="page">The page number for paginated results. Default is 1.</param>
+        /// <param name="cancellationToken">Cancellation token for the request.</param>
         /// <response code="200">Returns the movie details if found.</response>
-        /// <response code="400">If the ID is null or empty.</response>
-        /// <response code="404">If no movie is found with the given ID.</response>
+        /// <response code="400">If the query is null or empty.</response>
+        /// <response code="404">If no movie is found with the given query.</response>
         /// <response code="500">If an unexpected server error occurs.</response>
         /// <returns>The search result movie(s) details.</returns>
         [HttpGet("search")]
-        [ProducesResponseType(typeof(IEnumerable<Movie>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(MovieSearchResults), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> SearchAsync(string query, int page = 0, CancellationToken cancellationToken = default)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> SearchAsync(
+            [FromQuery][Required] string query,
+            [FromQuery][Range(1, int.MaxValue, ErrorMessage = "Page must be at least 1.")] int page = 1,
+            CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(query))
-            {
-                return BadRequest("Query cannot be null or empty.");
-            }
-
             // Redis cache could be used here if needed, but for simplicity, we use in-memory cache.
             string cacheKey = CacheKeyHelper.CreateSearchKey(query, page);
             if (_cache.TryGetValue<MovieSearchResults>(cacheKey, out var cachedSearchResult))

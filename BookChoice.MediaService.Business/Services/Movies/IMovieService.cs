@@ -1,5 +1,4 @@
 ﻿using BookChoice.MediaService.Data.Models.TMDb;
-using Google.Apis.YouTube.v3.Data;
 
 namespace BookChoice.MediaService.Business.Services.Movies
 {

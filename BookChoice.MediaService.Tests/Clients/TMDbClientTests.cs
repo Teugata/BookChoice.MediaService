@@ -3,7 +3,6 @@ using BookChoice.MediaService.Business.Clients.TMDb;
 using BookChoice.MediaService.Data.Models.TMDb;
 using BookChoice.MediaService.Tests.Attributes;
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using NSubstitute;
 using RichardSzalay.MockHttp;
 using System.Net;

@@ -7,7 +7,6 @@ using BookChoice.MediaService.Tests.Attributes;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -16,27 +15,6 @@ namespace BookChoice.MediaService.Tests.Controllers
 {
     public class MoviesControllerTests
     {
-        [Theory]
-        [InlineAutoNSubstituteData(default!)]
-        [InlineAutoNSubstituteData("")]
-        [InlineAutoNSubstituteData(" ")]
-        public async Task Get_ShouldReturnBadRequest_WhenIdIsNullOrWhitespace(
-            string id,
-            [Frozen] ILogger<MoviesController> logger,
-            [Frozen] IMovieService movieService,
-            [Frozen] IMemoryCache cache)
-        {
-            // Arrange
-            var controller = new MoviesController(logger, movieService, cache);
-
-            // Act
-            var result = await controller.GetAsync(id);
-
-            // Assert
-            result.Should().BeOfType<BadRequestObjectResult>()
-                .Which.Value.Should().Be("ID cannot be null or empty.");
-        }
-
         [Theory, AutoNSubstituteData]
         public async Task Get_ShouldReturnNotFound_WhenMovieIsNull(
             string id,
@@ -129,27 +107,6 @@ namespace BookChoice.MediaService.Tests.Controllers
             result.Should().BeOfType<OkObjectResult>()
                 .Which.Value.Should().Be(movie);
             await movieService.DidNotReceive().GetAsync(Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
-        }
-
-        [Theory]
-        [InlineAutoNSubstituteData(default!)]
-        [InlineAutoNSubstituteData("")]
-        [InlineAutoNSubstituteData(" ")]
-        public async Task Search_ShouldReturnBadRequest_WhenQueryIsNullOrWhitespace(
-            string query,
-            [Frozen] ILogger<MoviesController> logger,
-            [Frozen] IMovieService movieService,
-            [Frozen] IMemoryCache cache)
-        {
-            // Arrange
-            var controller = new MoviesController(logger, movieService, cache);
-
-            // Act
-            var result = await controller.SearchAsync(query);
-
-            // Assert
-            result.Should().BeOfType<BadRequestObjectResult>()
-                .Which.Value.Should().Be("Query cannot be null or empty.");
         }
 
         [Theory, AutoNSubstituteData]

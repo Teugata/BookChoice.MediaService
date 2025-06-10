@@ -6,7 +6,6 @@ using BookChoice.MediaService.Data.Models.TMDb;
 using BookChoice.MediaService.Data.Models.YouTube;
 using BookChoice.MediaService.Tests.Attributes;
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
