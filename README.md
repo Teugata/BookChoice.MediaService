@@ -60,7 +60,7 @@ Example:
 ## Getting Started
 
 1. **Clone the repository**
-2. **Configure API keys** in `appsettings.json`
+2. **Configure the TMDb access token and YouTube API key (or use the existing ones)** in `appsettings.json`
 3. **Build and run** the application with or without using Docker
 4. **Access the API** at `https://localhost:{port}/api/movies` directly, or view the interactive Swagger documentation at `https://localhost:{port}/swagger/index.html`.
 
