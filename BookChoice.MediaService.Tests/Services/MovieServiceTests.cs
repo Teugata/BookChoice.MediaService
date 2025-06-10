@@ -13,8 +13,29 @@ namespace BookChoice.MediaService.Tests.Services
 {
     public class MovieServiceTests
     {
+        [Theory]
+        [InlineAutoNSubstituteData(default!)]
+        [InlineAutoNSubstituteData("")]
+        [InlineAutoNSubstituteData(" ")]
+        public async Task GetAsync_ThrowsArgumentException_WhenIdIsNullOrWhitespace(
+            string id,
+            [Frozen] ILogger<MovieService> logger,
+            [Frozen] ITMDbClient tmdbClient,
+            [Frozen] IYouTubeClient youTubeClient)
+        {
+            // Arrange
+            var sut = new MovieService(logger, tmdbClient, youTubeClient);
+
+            // Act
+            Func<Task> act = async () => await sut.GetAsync(id, true, 10, default);
+
+            // Assert
+            await act.Should().ThrowAsync<ArgumentException>()
+                .WithMessage("*Movie ID cannot be null or empty*");
+        }
+
         [Theory, AutoNSubstituteData]
-        public async Task GetAsync_ShouldLogAndRethrow_WhenTmdbClientThrows(
+        public async Task GetAsync_ThrowsAndLogsError_WhenTmdbClientThrows(
             string id,
             Exception exception,
             [Frozen] ILogger<MovieService> logger,
@@ -38,7 +59,7 @@ namespace BookChoice.MediaService.Tests.Services
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task GetAsync_ShouldReturnNullAndLogWarning_WhenMovieNotFound(
+        public async Task GetAsync_ReturnsNullAndLogsWarning_WhenMovieNotFound(
             string id,
             [Frozen] ILogger<MovieService> logger,
             [Frozen] ITMDbClient tmdbClient,
@@ -62,7 +83,7 @@ namespace BookChoice.MediaService.Tests.Services
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task GetAsync_ShouldReturnMovieAndLogWarning_WhenMovieHasNoTitle(
+        public async Task GetAsync_ReturnsMovieAndLogsWarning_WhenMovieHasNoTitle(
             string id,
             Movie movie,
             [Frozen] ILogger<MovieService> logger,
@@ -89,7 +110,7 @@ namespace BookChoice.MediaService.Tests.Services
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task GetAsync_ShouldReturnMovieAndSetYouTubeVideos_WhenMovieHasTitle(
+        public async Task GetAsync_ReturnsMovieAndSetsYouTubeVideos_WhenMovieHasTitle(
             string id,
             Movie movie,
             string title,
@@ -114,7 +135,7 @@ namespace BookChoice.MediaService.Tests.Services
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task GetAsync_ShouldNotCallYouTube_WhenIncludeAdditionalYouTubeVideosIsFalse(
+        public async Task GetAsync_DoesNotCallYouTube_WhenIncludeAdditionalYouTubeVideosIsFalse(
             string id,
             Movie movie,
             string title,
@@ -136,7 +157,7 @@ namespace BookChoice.MediaService.Tests.Services
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task SearchAsync_ShouldReturnResults_WhenTmdbReturnsMovies(
+        public async Task SearchAsync_ReturnsResults_WhenTmdbReturnsMovies(
             string query,
             int page,
             MovieSearchResults searchResults,
@@ -157,7 +178,7 @@ namespace BookChoice.MediaService.Tests.Services
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task SearchAsync_ShouldReturnNull_WhenTmdbReturnsNull(
+        public async Task SearchAsync_ReturnsNull_WhenTmdbReturnsNull(
             string query,
             int page,
             [Frozen] ILogger<MovieService> logger,
@@ -177,7 +198,7 @@ namespace BookChoice.MediaService.Tests.Services
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task SearchAsync_ShouldThrow_WhenTmdbThrows(
+        public async Task SearchAsync_ThrowsException_WhenTmdbThrows(
             string query,
             int page,
             Exception exception,
@@ -192,6 +213,48 @@ namespace BookChoice.MediaService.Tests.Services
             // Act & Assert
             Func<Task> act = async () => await sut.SearchAsync(query, page, default);
             await act.Should().ThrowAsync<Exception>().WithMessage(exception.Message);
+        }
+
+        [Theory]
+        [InlineAutoNSubstituteData(0)]
+        [InlineAutoNSubstituteData(-1)]
+        public async Task SearchAsync_ThrowsArgumentOutOfRangeException_WhenPageIsLessThanOne(
+            int page,
+            string query,
+            [Frozen] ILogger<MovieService> logger,
+            [Frozen] ITMDbClient tmdbClient,
+            [Frozen] IYouTubeClient youTubeClient)
+        {
+            // Arrange
+            var sut = new MovieService(logger, tmdbClient, youTubeClient);
+
+            // Act
+            Func<Task> act = async () => await sut.SearchAsync(query, page, default);
+
+            // Assert
+            await act.Should().ThrowAsync<ArgumentOutOfRangeException>()
+                .WithMessage("*Page must be at least 1*");
+        }
+
+        [Theory]
+        [InlineAutoNSubstituteData(default!)]
+        [InlineAutoNSubstituteData("")]
+        [InlineAutoNSubstituteData(" ")]
+        public async Task SearchAsync_ThrowsArgumentException_WhenQueryIsNullOrWhitespace(
+            string query,
+            [Frozen] ILogger<MovieService> logger,
+            [Frozen] ITMDbClient tmdbClient,
+            [Frozen] IYouTubeClient youTubeClient)
+        {
+            // Arrange
+            var sut = new MovieService(logger, tmdbClient, youTubeClient);
+
+            // Act
+            Func<Task> act = async () => await sut.SearchAsync(query, 1, default);
+
+            // Assert
+            await act.Should().ThrowAsync<ArgumentException>()
+                .WithMessage("*Movie query cannot be null or empty*");
         }
     }
 }

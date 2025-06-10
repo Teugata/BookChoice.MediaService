@@ -15,7 +15,7 @@ namespace BookChoice.MediaService.Tests.Clients
         [InlineAutoData(default!)]
         [InlineAutoData("")]
         [InlineAutoData("  ")]
-        public async Task GetMovieAsync_ShouldThrow_WhenIdIsNullOrWhitespace(
+        public async Task GetMovieAsync_ThrowsArgumentException_WhenIdIsNullOrWhitespace(
             string id)
         {
             // Arrange
@@ -31,7 +31,7 @@ namespace BookChoice.MediaService.Tests.Clients
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task GetMovieAsync_ShouldReturnMovieWithImagesAndVideos_WhenApiReturnsSuccess(
+        public async Task GetMovieAsync_ReturnsMovieWithImagesAndVideos_WhenApiReturnsSuccess(
             string id,
             Movie movie,
             Images images,
@@ -62,7 +62,7 @@ namespace BookChoice.MediaService.Tests.Clients
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task GetMovieAsync_ShouldReturnNull_WhenMovieNotFound(
+        public async Task GetMovieAsync_ReturnsNull_WhenMovieNotFound(
             string id)
         {
             // Arrange
@@ -84,7 +84,7 @@ namespace BookChoice.MediaService.Tests.Clients
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task GetMovieAsync_ShouldThrow_WhenHttpClientThrows(
+        public async Task GetMovieAsync_ThrowsException_WhenHttpClientThrows(
             string id)
         {
             // Arrange
@@ -106,7 +106,7 @@ namespace BookChoice.MediaService.Tests.Clients
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task SearchMoviesAsync_ShouldReturnResults_WhenApiReturnsResults(
+        public async Task SearchMoviesAsync_ReturnsResults_WhenApiReturnsResults(
             string query,
             int page,
             MovieSearchResults searchResult)
@@ -130,7 +130,7 @@ namespace BookChoice.MediaService.Tests.Clients
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task SearchMoviesAsync_ShouldReturnEmpty_WhenNoResults(
+        public async Task SearchMoviesAsync_ReturnsEmptyResults_WhenNoResults(
             string query,
             int page)
         {
@@ -157,7 +157,7 @@ namespace BookChoice.MediaService.Tests.Clients
         [InlineAutoData(default!)]
         [InlineAutoData("")]
         [InlineAutoData("  ")]
-        public async Task SearchMoviesAsync_ShouldThrow_WhenQueryIsNullOrWhitespace(
+        public async Task SearchMoviesAsync_ThrowsArgumentException_WhenQueryIsNullOrWhitespace(
             string query,
             int page)
         {
@@ -174,7 +174,7 @@ namespace BookChoice.MediaService.Tests.Clients
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task SearchMoviesAsync_ShouldReturnEmpty_WhenApiReturns404(
+        public async Task SearchMoviesAsync_ReturnsNull_WhenApiReturns404(
             string query,
             int page)
         {
@@ -197,7 +197,7 @@ namespace BookChoice.MediaService.Tests.Clients
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task SearchMoviesAsync_ShouldThrow_WhenHttpClientThrows(
+        public async Task SearchMoviesAsync_ThrowsException_WhenHttpClientThrows(
             string query,
             int page)
         {
@@ -217,6 +217,25 @@ namespace BookChoice.MediaService.Tests.Clients
 
             // Assert
             await act.Should().ThrowAsync<Exception>();
+        }
+
+        [Theory]
+        [InlineAutoData("query", 0)]
+        [InlineAutoData("query", -1)]
+        public async Task SearchMoviesAsync_ThrowsArgumentException_WhenPageIsLessThanOne(
+            string query,
+            int page)
+        {
+            // Arrange
+            var httpClient = new HttpClient();
+            var client = new TMDbClient(httpClient);
+
+            // Act
+            Func<Task> act = async () => await client.SearchMoviesAsync(query, page, default);
+
+            // Assert
+            await act.Should().ThrowAsync<ArgumentException>()
+                .WithMessage("*Page must be at least 1*");
         }
     }
 }

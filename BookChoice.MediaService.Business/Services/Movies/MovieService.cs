@@ -7,8 +7,14 @@ namespace BookChoice.MediaService.Business.Services.Movies
 {
     public class MovieService(ILogger<MovieService> _logger, ITMDbClient _tmdbClient, IYouTubeClient _youTubeClient) : IMovieService
     {
+        /// <inheritdoc />
         public async Task<Movie?> GetAsync(string id, bool includeAdditionalYouTubeVideos, int maxYouTubeResults, CancellationToken cancellationToken)
         {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                throw new ArgumentException("Movie ID cannot be null or empty.", nameof(id));
+            }
+
             Movie? movieResult;
             try
             {
@@ -40,8 +46,19 @@ namespace BookChoice.MediaService.Business.Services.Movies
             return movieResult;
         }
 
+        /// <inheritdoc />
         public async Task<MovieSearchResults?> SearchAsync(string query, int page, CancellationToken cancellationToken)
         {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                throw new ArgumentException("Movie query cannot be null or empty.", nameof(query));
+            }
+
+            if (page < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(page), "Page must be at least 1.");
+            }
+
             MovieSearchResults? searchResults;
             try
             {

@@ -8,6 +8,7 @@ namespace BookChoice.MediaService.Business.Clients.YouTube
 {
     public class YouTubeClient(IMapper _mapper, IOptions<YouTubeClientOptions> _options) : IYouTubeClient
     {
+        /// <inheritdoc />
         public async Task<IEnumerable<YouTubeVideo>> SearchVideosAsync(string query, int maxResults, CancellationToken cancellationToken)
         {
             var youtubeService = new YouTubeService(new BaseClientService.Initializer()

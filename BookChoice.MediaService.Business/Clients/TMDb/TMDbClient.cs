@@ -8,6 +8,7 @@ namespace BookChoice.MediaService.Business.Clients.TMDb
     {
         private static readonly JsonSerializerOptions JsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
 
+        /// <inheritdoc />
         public async Task<Movie?> GetMovieAsync(string id, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -25,11 +26,16 @@ namespace BookChoice.MediaService.Business.Clients.TMDb
             return movie;
         }
 
+        /// <inheritdoc />
         public async Task<MovieSearchResults?> SearchMoviesAsync(string query, int page, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(query))
             {
                 throw new ArgumentException("Movie query cannot be null or empty.", nameof(query));
+            }
+            if (page < 1)
+            {
+                throw new ArgumentException("Page must be at least 1.", nameof(page));
             }
 
             var queryParams = new Dictionary<string, string>

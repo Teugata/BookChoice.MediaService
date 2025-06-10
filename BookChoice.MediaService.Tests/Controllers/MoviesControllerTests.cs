@@ -16,7 +16,7 @@ namespace BookChoice.MediaService.Tests.Controllers
     public class MoviesControllerTests
     {
         [Theory, AutoNSubstituteData]
-        public async Task Get_ShouldReturnNotFound_WhenMovieIsNull(
+        public async Task GetAsync_ReturnsNotFound_WhenMovieIsNull(
             string id,
             [Frozen] ILogger<MoviesController> logger,
             [Frozen] IMovieService movieService,
@@ -36,7 +36,7 @@ namespace BookChoice.MediaService.Tests.Controllers
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task Get_ShouldReturnOk_WhenMovieIsFound(
+        public async Task GetAsync_ReturnsOk_WhenMovieIsFound(
             string id,
             Movie movie,
             [Frozen] ILogger<MoviesController> logger,
@@ -60,7 +60,7 @@ namespace BookChoice.MediaService.Tests.Controllers
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task Get_ShouldReturnInternalServerError_WhenExceptionThrown(
+        public async Task GetAsync_ReturnsInternalServerError_WhenExceptionIsThrown(
             string id,
             [Frozen] ILogger<MoviesController> logger,
             [Frozen] IMovieService movieService,
@@ -83,7 +83,7 @@ namespace BookChoice.MediaService.Tests.Controllers
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task Get_ShouldReturnCachedMovie_WhenCacheHit(
+        public async Task GetAsync_ReturnsCachedMovie_WhenCacheHit(
             string id,
             Movie movie,
             [Frozen] ILogger<MoviesController> logger,
@@ -110,7 +110,7 @@ namespace BookChoice.MediaService.Tests.Controllers
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task Search_ShouldReturnOk_WhenResultsFound(
+        public async Task SearchAsync_ReturnsOk_WhenResultsFound(
             string query,
             int page,
             MovieSearchResults searchResults,
@@ -132,7 +132,7 @@ namespace BookChoice.MediaService.Tests.Controllers
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task Search_ShouldReturnInternalServerError_WhenExceptionThrown(
+        public async Task SearchAsync_ReturnsInternalServerError_WhenExceptionIsThrown(
             string query,
             int page,
             [Frozen] ILogger<MoviesController> logger,
@@ -153,7 +153,7 @@ namespace BookChoice.MediaService.Tests.Controllers
         }
 
         [Theory, AutoNSubstituteData]
-        public async Task Search_ShouldReturnCachedResults_WhenCacheHit(
+        public async Task SearchAsync_ReturnsCachedResults_WhenCacheHit(
             string query,
             int page,
             MovieSearchResults cachedSearchResult,

@@ -42,8 +42,10 @@ namespace BookChoice.MediaService.Controllers
             string cacheKey = CacheKeyHelper.CreateMovieKey(id, includeAdditionalYouTubeVideos, maxYouTubeResults);
             if (_cache.TryGetValue<Movie>(cacheKey, out var cachedMovie))
             {
+                _logger.LogDebug("Cache hit for movie. Key: {CacheKey}, Id: {Id}, IncludeYouTube: {IncludeYouTube}, MaxYouTube: {MaxYouTube}", cacheKey, id, includeAdditionalYouTubeVideos, maxYouTubeResults);
                 return Ok(cachedMovie);
             }
+            _logger.LogDebug("Cache miss for movie. Key: {CacheKey}, Id: {Id}, IncludeYouTube: {IncludeYouTube}, MaxYouTube: {MaxYouTube}", cacheKey, id, includeAdditionalYouTubeVideos, maxYouTubeResults);
 
             Movie? movie;
             try
@@ -92,8 +94,10 @@ namespace BookChoice.MediaService.Controllers
             string cacheKey = CacheKeyHelper.CreateSearchKey(query, page);
             if (_cache.TryGetValue<MovieSearchResults>(cacheKey, out var cachedSearchResult))
             {
+                _logger.LogDebug("Cache hit for search. Key: {CacheKey}, Query: {Query}, Page: {Page}", cacheKey, query, page);
                 return Ok(cachedSearchResult);
             }
+            _logger.LogDebug("Cache miss for search. Key: {CacheKey}, Query: {Query}, Page: {Page}", cacheKey, query, page);
 
             MovieSearchResults? results;
             try
