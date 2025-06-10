@@ -47,13 +47,13 @@ Configuration is managed via `appsettings.json`. You must provide valid TMDb acc
 Example:
 
 <pre>"TMDbClient": { 
-    "BaseUrl": "https://api.themoviedb.org/3/", 
-    "AccessToken": "your_tmdb_access_token" 
-  }, 
-  "YouTubeClient": { 
-    "BaseUrl": "https://www.googleapis.com/youtube/v3/", 
-    "ApiKey": "your_youtube_api_key" 
-  }</pre>
+  "BaseUrl": "https://api.themoviedb.org/3/", 
+  "AccessToken": "your_tmdb_access_token" 
+}, 
+"YouTubeClient": { 
+  "BaseUrl": "https://www.googleapis.com/youtube/v3/", 
+  "ApiKey": "your_youtube_api_key" 
+}</pre>
 
 ---
 
