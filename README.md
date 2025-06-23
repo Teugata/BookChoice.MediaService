@@ -42,7 +42,7 @@ GET /api/movies/search?query={query}&page={page}
 
 ## Configuration
 
-Configuration is managed via `appsettings.json`. You must provide valid TMDb access token and YouTube API key or reuse the existing ones.
+Configuration is managed via `appsettings.json`. You must provide valid TMDb access token and YouTube API key.
 
 Example:
 
@@ -60,7 +60,7 @@ Example:
 ## Getting Started
 
 1. **Clone the repository**
-2. **Configure the TMDb access token and YouTube API key (or use the existing ones)** in `appsettings.json`
+2. **Configure the TMDb access token and YouTube API key** in `appsettings.json`
 3. **Build and run** the application with or without using Docker
 4. **Access the API** at `https://localhost:{port}/api/movies` directly, or view the interactive Swagger documentation at `https://localhost:{port}/swagger/index.html`.
 
@@ -92,6 +92,9 @@ The following enhancements could further improve the functionality, performance,
 
 - **API Authentication & Authorization:**  
   Add authentication (e.g., JWT, API keys) to restrict access to the API endpoints.
+
+- **Protecting Sensitive Configuration Data**
+  Store and retrieve sensitive configuration values such as the youtube api key and tmdb access token in a secure location, such as Azure Key Vault.
 
 - **OpenAPI/Swagger Enhancements:**  
   Add more detailed response examples and error schemas to the Swagger documentation for better API consumer experience.
