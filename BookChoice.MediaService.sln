@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36202.13 d17.14
+VisualStudioVersion = 17.14.36202.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookChoice.MediaService", "BookChoice.MediaService\BookChoice.MediaService.csproj", "{DE4DCF4B-BE87-4712-A7FB-2203A9241EDA}"
 EndProject
@@ -10,6 +10,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookChoice.MediaService.Data", "BookChoice.MediaService.Data\BookChoice.MediaService.Data.csproj", "{FD8C6659-8E1A-4C64-A5C4-66BF586696F9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookChoice.MediaService.Tests", "BookChoice.MediaService.Tests\BookChoice.MediaService.Tests.csproj", "{DCB7FFBF-57CF-43FF-81F0-1904884FCD97}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
